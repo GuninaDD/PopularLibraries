@@ -1,52 +1,54 @@
 package com.geekbrains.popularlibrarieslesson2;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.widget.TextView;
 
+import com.geekbrains.popularlibrarieslesson2.presenter.PresenterManager;
+import com.geekbrains.popularlibrarieslesson2.presenter.SimplePresenter;
+import com.geekbrains.popularlibrarieslesson2.watcher.SimpleWatcher;
 import com.google.android.material.textfield.TextInputEditText;
 
-public class MainActivity extends AppCompatActivity {
-    private TextView textView;
-    private TextInputEditText editText;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+
+public class MainActivity extends Activity {
+    private SimplePresenter presenter;
+    private Disposable disposable;
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initViews();
+        if (savedInstanceState == null) {
+            presenter = new SimplePresenter();
+        } else {
+            presenter = (SimplePresenter) PresenterManager.getInstance().restorePresenter(savedInstanceState);
+        }
     }
 
-    private void initViews() {
-        editText = findViewById(R.id.editText);
-        textView = findViewById(R.id.textView);
-
-        editText.addTextChangedListener(textWatcher);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Observable<String> observable = Observable.create(emitter -> ((TextInputEditText) findViewById(R.id.editText))
+                .addTextChangedListener((SimpleWatcher) (editable -> emitter.onNext(editable.toString()))));
+        disposable = presenter.bindView(observable,value->((TextView)findViewById(R.id.textView)).setText(value));
     }
 
-    private final TextWatcher textWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    @Override
+    protected void onPause() {
+        super.onPause();
+        presenter.unbindView(disposable);
+    }
 
-        }
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        PresenterManager.getInstance().savePresenter(presenter, outState);
+    }
 
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            if (s.length() != 0) {
-                textView.setText(editText.getText());
-            }
-            else
-            {
-                textView.setText(getResources().getString(R.string.tv_empty_text));
-            }
-        }
-    };
 }
