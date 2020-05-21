@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PopularLibrariesLesson2</string>
+    <string name="edittext_hint">Введите сюда свой текст</string>
+    <string name="tv_empty_text">*Ничего не введено</string>
+</resources>
