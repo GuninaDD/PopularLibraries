@@ -1,0 +1,2 @@
+rootProject.name='PopLibLesson3'
+include ':app'
